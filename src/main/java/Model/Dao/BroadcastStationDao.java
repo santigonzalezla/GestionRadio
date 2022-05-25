@@ -60,4 +60,16 @@ public class BroadcastStationDao implements StationManager
         fileManager.writeSerializable(broadcastStationList);
         fileManager.closeWriterSerializable();
     }
+
+    public ArrayList<String> showBroadcastList()
+    {
+        ArrayList<String> aux = new ArrayList<>();
+
+        for (int i = 0; i < broadcastStationList.size(); i++)
+        {
+            aux.add(broadcastStationList.get(i).getNameBroadcastStation() +";" + broadcastStationList.get(i).getImageBroadcastStation());
+        }
+
+        return aux;
+    }
 }
