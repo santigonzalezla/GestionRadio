@@ -4,8 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
+
 @ToString
-public class MusicalTrackDto
+public class MusicalTrackDto implements Serializable
 {
     @Getter @Setter
     private String genderMusicalTrack;
@@ -24,4 +26,10 @@ public class MusicalTrackDto
 
     @Getter @Setter
     private String fileMusicalTrack;
+
+    @Override
+    public String toString()
+    {
+    return "Nombre: "+nameMusicalTrack+", autor:"+authorMusicalTrack+", anio: "+yearMusicalTrack;
+    }
 }

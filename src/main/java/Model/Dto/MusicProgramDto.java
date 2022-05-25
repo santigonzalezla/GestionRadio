@@ -3,13 +3,14 @@ package Model.Dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class MusicProgramDto
+public class MusicProgramDto implements Serializable
 {
     @Getter @Setter
-    private ArrayList<MusicalTrackDto> tracksMusicProgram;
+    private String nameBroadcastProgram;
 
     @Getter @Setter
-    private String descriptionMusicProgram;
+    private ArrayList<MusicalTrackDto> tracksMusicProgram;
 }

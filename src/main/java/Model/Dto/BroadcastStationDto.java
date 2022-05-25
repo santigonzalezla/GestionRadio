@@ -4,10 +4,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.awt.*;
+import java.io.Serializable;
 import java.math.BigInteger;
 
 @ToString
-public class BroadcastStationDto
+public class BroadcastStationDto implements Serializable
 {
     @Getter @Setter
     private String nameBroadcastStation;
@@ -20,4 +22,7 @@ public class BroadcastStationDto
 
     @Getter @Setter
     private BigInteger signalBroadcastStation;
+
+    @Getter @Setter
+    private String imageBroadcastStation;
 }
