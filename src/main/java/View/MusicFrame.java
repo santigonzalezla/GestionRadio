@@ -1,13 +1,20 @@
 package View;
 
 import Controller.Controller;
-import javazoom.jlgui.basicplayer.BasicPlayer;
+import Model.Dto.MusicProgramDto;
+import Model.Dto.MusicalTrackDto;
+import Util.List;
+import Util.Node;
+import Util.Player;
+
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class MusicFrame extends JFrame implements ActionListener
@@ -25,6 +32,7 @@ public class MusicFrame extends JFrame implements ActionListener
     private JProgressBar songProgressBar;
     private JProgressBar volumeProgressBar;
     private ArrayList<JButton> broadcastBtnList;
+    private ArrayList<JButton> musicBtnList;
     private JButton homeBtn;
     private JButton searchBtn;
     private JButton createBroadcastBtn;
@@ -33,8 +41,17 @@ public class MusicFrame extends JFrame implements ActionListener
     private JButton nextSongBtn;
     private JButton muteBtn;
     private JButton backBtn;
-    private BasicPlayer musicPlayer;
-
+    private Boolean isPlaying;
+    private int optionPause;
+    private Player player;
+    private JFileChooser jFileChooser;
+    private List reproductionList;
+    private Node actual;
+    private ArrayList <MusicProgramDto> musicProgramList;
+    private ArrayList <MusicalTrackDto> musicList;
+    /**
+     * Constructor de la clase
+     */
     public MusicFrame()
     {
         super("TRENDYBEATS");
@@ -66,8 +83,9 @@ public class MusicFrame extends JFrame implements ActionListener
         songNameLbl = new JLabel("Song Name");
         artistNameLbl = new JLabel("Artist Name");
         songProgressBar = new JProgressBar();
-        volumeProgressBar = new JProgressBar();
+        volumeSlider = new JSlider();
         broadcastBtnList = new ArrayList<>();
+        musicBtnList = new ArrayList<>();
         homeBtn = new JButton("Home");
         searchBtn = new JButton("Search");
         createBroadcastBtn = new JButton("Create Broadcast");
@@ -76,7 +94,11 @@ public class MusicFrame extends JFrame implements ActionListener
         nextSongBtn = new JButton("Next Song");
         muteBtn = new JButton("Mute");
         backBtn = new JButton("\uD83E\uDC68");
-        musicPlayer = new BasicPlayer();
+        isPlaying = false;
+        optionPause = 0;
+
+        reproductionList = new List();
+        player = new Player();
 
         //Add Components
         add(leftPanel);
@@ -97,12 +119,14 @@ public class MusicFrame extends JFrame implements ActionListener
         //Prepare Bottom Panel
         prepareBottomPanel();
 
-
         //Edit Components
         leftPanel.setBackground(Color.decode("#2B0548"));
         rightPanel.setBackground(Color.decode("#220129"));
         bottomPanel.setBackground(Color.decode("#300C4C"));
 
+        playBtn.addActionListener(this);
+        nextSongBtn.addActionListener(this);
+        previousSongBtn.addActionListener(this);
         backBtn.addActionListener(this);
     }
 
@@ -116,16 +140,37 @@ public class MusicFrame extends JFrame implements ActionListener
     {
         if (e.getSource() == playBtn)
         {
-            try
+            if (optionPause == 0)
             {
-                openFile("src/music/music.mp3");
-                playMusic();
-            }
-            catch (Exception ex)
+                pauseActionPerformed(e);
+                ImageIcon playIcon = new ImageIcon("src/main/java/Images/PlayIcon.png");
+                Image playImg = playIcon.getImage();
+                Image newplayImg = playImg.getScaledInstance(30, 30,  Image.SCALE_AREA_AVERAGING);
+                playIcon = new ImageIcon(newplayImg);
+                playBtn.setIcon(playIcon);
+                optionPause = 1;
+                }
+            else
             {
-                throw new RuntimeException(ex);
+                resumeActionPerformed(e);
+                ImageIcon playIcon = new ImageIcon("src/main/java/Images/PauseIcon.png");
+                Image playImg = playIcon.getImage();
+                Image newplayImg = playImg.getScaledInstance(30, 30,  Image.SCALE_AREA_AVERAGING);
+                playIcon = new ImageIcon(newplayImg);
+                playBtn.setIcon(playIcon);
+                JOptionPane.showMessageDialog(null, "Playing" + isPlaying);
+                optionPause = 0;
             }
+        }
 
+        if (e.getSource() == nextSongBtn)
+        {
+            nextSongActionPerformed(e);
+        }
+
+        if (e.getSource() == previousSongBtn)
+        {
+            previousActionPerformed(e);
         }
 
         if (e.getSource() == backBtn)
@@ -207,7 +252,7 @@ public class MusicFrame extends JFrame implements ActionListener
         musicScrollPane.getViewport().setView(musicPanel);
         musicScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         musicScrollPane.setBorder(BorderFactory.createLineBorder(Color.decode("#220129")));
-        musicPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        musicPanel.setLayout(new GridLayout(10,2));
         musicPanel.setPreferredSize(new Dimension(1050,580));
         musicPanel.setBackground(Color.decode("#220129"));
 
@@ -226,7 +271,7 @@ public class MusicFrame extends JFrame implements ActionListener
         bottomPanel.add(songNameLbl);
         bottomPanel.add(artistNameLbl);
         bottomPanel.add(songProgressBar);
-        bottomPanel.add(volumeProgressBar);
+        bottomPanel.add(volumeSlider);
         bottomPanel.add(previousSongBtn);
         bottomPanel.add(playBtn);
         bottomPanel.add(nextSongBtn);
@@ -234,21 +279,99 @@ public class MusicFrame extends JFrame implements ActionListener
         //bottomPanel.add(new JLabel("Copyright © 2022 TrendyBeats"));
         //bottomPanel.add(new JButton("About"));
 
+        volumeSlider.setMaximum(1);
+        volumeSlider.setMinimum(0);
+        volumeSlider.setEnabled(true);
+
         //Edit Bottom Panel Components
         songNameLbl.setBounds(610,0,250,30);
         artistNameLbl.setBounds(610,10,250,40);
         songProgressBar.setBounds(420,40,450,10);
-        volumeProgressBar.setBounds(1100,30,150,10);
+        volumeSlider.setBounds(1100,30,150,10);
         previousSongBtn.setBounds(70,10,40,40);
         playBtn.setBounds(120,10,40,40);
         nextSongBtn.setBounds(170,10,40,40);
         muteBtn.setBounds(1070,25,20,20);
+
+        playBtn.setContentAreaFilled(false);
+        playBtn.setBorderPainted(false);
+        previousSongBtn.setContentAreaFilled(false);
+        previousSongBtn.setBorderPainted(false);
+        nextSongBtn.setContentAreaFilled(false);
+        nextSongBtn.setBorderPainted(false);
+        muteBtn.setContentAreaFilled(false);
+        muteBtn.setBorderPainted(false);
 
         songNameLbl.setForeground(Color.white);
         songNameLbl.setFont(new Font("Montserrart", Font.BOLD, 12));
 
         artistNameLbl.setForeground(Color.white);
         artistNameLbl.setFont(new Font("Montserrart", 0, 12));
+
+
+        ImageIcon playIcon = new ImageIcon("src/main/java/Images/PlayIcon.png");
+        Image playImg = playIcon.getImage();
+        Image newplayImg = playImg.getScaledInstance(30, 30,  Image.SCALE_AREA_AVERAGING);
+        playIcon = new ImageIcon(newplayImg);
+        playBtn.setIcon(playIcon);
+
+        ImageIcon previousIcon = new ImageIcon("src/main/java/Images/BackIcon.png");
+        Image previousImg = previousIcon.getImage();
+        Image previousnewIcon = previousImg.getScaledInstance(30, 30,  Image.SCALE_AREA_AVERAGING);
+        previousIcon = new ImageIcon(previousnewIcon);
+        previousSongBtn.setIcon(previousIcon);
+
+        ImageIcon nextIcon = new ImageIcon("src/main/java/Images/NextIcon.png");
+        Image nextImage = nextIcon.getImage();
+        Image newnextImg = nextImage.getScaledInstance(30, 30,  Image.SCALE_AREA_AVERAGING);
+        nextIcon = new ImageIcon(newnextImg);
+        nextSongBtn.setIcon(nextIcon);
+
+        ImageIcon musicIcon = new ImageIcon("src/main/java/Images/SongIcon.png");
+        Image image = musicIcon.getImage();
+        Image newimg = image.getScaledInstance(15, 15,  Image.SCALE_AREA_AVERAGING);
+        musicIcon = new ImageIcon(newimg);
+        muteBtn.setIcon(musicIcon);
+
+        volumeSlider.addMouseListener(new MouseListener()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e)
+            {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e)
+            {
+                try
+                {
+                    player.controller.setGain(volumeSlider.getValue());
+                }
+                catch (Exception exception)
+                {
+
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e)
+            {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e)
+            {
+
+            }
+        });
     }
 
     private void prepareMusicPanel()
@@ -256,38 +379,134 @@ public class MusicFrame extends JFrame implements ActionListener
         for (String broadcastList: controller.showBroadcastStation())
         {
             String parts[] = broadcastList.split(";");
-            ImageIcon homeIcon = new ImageIcon(parts[1]);
-            broadcastBtnList.add(new JButton(homeIcon + " " + parts[0]));
+            broadcastBtnList.add(new JButton(parts[0]));
         }
 
         for (JButton btn : broadcastBtnList)
         {
+            btn.setSize(new Dimension(450,40));
+            btn.setBackground(Color.decode("#220129"));
+            btn.setForeground(Color.white);
+            btn.setFont(new Font("Montserrat Bold", 0, 20));
             musicPanel.add(btn);
+
+            btn.addActionListener(new ActionListener()
+            {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    if (e.getSource() == btn)
+                    {
+                        musicPanel.removeAll();
+                        musicPanel.repaint();
+                        fillmusicPanel(btn.getText());
+                    }
+                }
+            });
         }
     }
-
-    private void playMusic() throws Exception
+    /**
+     * Método para asignar las listas de canciones de los Daos
+     */
+    private void fillmusicPanel(String broadcastName)
     {
-        musicPlayer.play();
+        for (int i = 0; i < controller.musicProgramDao.musicProgramList.size(); i++)
+        {
+            if(controller.musicProgramDao.musicProgramList.get(i).getNameBroadcastProgram().equals(broadcastName))
+            {
+                musicList = controller.musicProgramDao.musicProgramList.get(i).getTracksMusicProgram();
+            }
+        }
+
+        for (String broadcastList: controller.showMusicalTrack())
+        {
+            musicBtnList.add(new JButton(broadcastList));
+        }
+
+        for (JButton btn : musicBtnList)
+        {
+            btn.setSize(new Dimension(450,40));
+            btn.setBackground(Color.decode("#220129"));
+            btn.setForeground(Color.white);
+            btn.setFont(new Font("Montserrat Bold", 0, 20));
+            musicPanel.add(btn);
+
+            btn.addActionListener(new ActionListener()
+            {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    if (e.getSource() == btn)
+                    {
+                        playActionPerformed(e);
+                    }
+                }
+            });
+        }
+
+        for(int i = 0; i < musicList.size(); i++)
+        {
+            reproductionList.insertar(musicList.get(i).getNameMusicalTrack(),musicList.get(i).getFileMusicalTrack());
+        }
     }
-
-    private void openFile(String ruta) throws Exception
+    /**
+     * Método para reproducir música
+     */
+    private void playActionPerformed(java.awt.event.ActionEvent evt)
     {
-        musicPlayer.open(new File(ruta));
+        if (reproductionList.IsEmpty())
+        {
+            JOptionPane.showMessageDialog(null, "No hay canciones");
+        }
+        else
+        {
+            ImageIcon playIcon = new ImageIcon("src/main/java/Images/PauseIcon.png");
+            Image playImg = playIcon.getImage();
+            Image newplayImg = playImg.getScaledInstance(30, 30,  Image.SCALE_AREA_AVERAGING);
+            playIcon = new ImageIcon(newplayImg);
+            playBtn.setIcon(playIcon);
+
+            if (actual == null)
+            {
+                actual = reproductionList.first;
+            }
+
+            try
+            {
+                player.controller.open(new URL("file:///" + actual.direccion));
+                player.controller.play();
+                songNameLbl.setText(actual.nombre);
+            }
+            catch (Exception e)
+            {
+
+            }
+        }
     }
-
-    private void pauseMusic() throws Exception
+    /**
+     * Método para pasar a la siguiente canción
+     */
+    //Siguiente
+    private void nextSongActionPerformed(java.awt.event.ActionEvent evt)
     {
-        musicPlayer.pause();
+        if(actual==null)
+        {
+            return;
+        }
+        actual = actual.siguiente;
+        playActionPerformed(evt);
     }
-
-    private void resumeMusic() throws Exception
+    /**
+     *Método para reproducir la canción anterior
+     */
+    //Anterior
+    private void previousActionPerformed(java.awt.event.ActionEvent evt)
     {
-        musicPlayer.resume();
-    }
-
-    private void stopMusic() throws Exception
-    {
-        musicPlayer.stop();
+        if(actual == null)
+        {
+            return;
+        }
+        actual = actual.anterior;
+        playActionPerformed(evt);
     }
 }

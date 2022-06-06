@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class BroadcastStationDao implements StationManager
 {
-    private ArrayList<BroadcastStationDto> broadcastStationList;
+    public ArrayList<BroadcastStationDto> broadcastStationList;
     private Persistance fileManager;
 
     public BroadcastStationDao()

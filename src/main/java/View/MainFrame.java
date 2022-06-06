@@ -65,7 +65,6 @@ public class MainFrame extends JFrame implements ActionListener
 
         //Prepare Left JPanel
         leftPanel.setLayout(null);
-        //leftPanel.setDefaultLookAndFeelDecorated(true);
         leftPanel.add(leftphotologoLbl);
         leftPanel.add(welcomeLbl);
         leftPanel.add(introLbl);

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class MusicalTrackDao implements StationManager
 {
-    private ArrayList<MusicalTrackDto> musicalTrackList;
+    public ArrayList<MusicalTrackDto> musicalTrackList;
     private Persistance fileManager;
 
     public MusicalTrackDao()

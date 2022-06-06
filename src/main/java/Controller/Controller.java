@@ -64,5 +64,10 @@ public class Controller
     {
         return broadcastStationDao.showBroadcastList();
     }
+
+    public ArrayList<String> showMusicalTrack()
+    {
+        return musicProgramDao.showProgramList();
+    }
 }
 
