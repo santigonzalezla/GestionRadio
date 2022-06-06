@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="basicplayer-3.0.0.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../LIBRERIAS/basicplayer-3.0.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../LIBRERIAS/jlayer-1.0.1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../LIBRERIAS/junit-3.8.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../LIBRERIAS/mp3spi-1.9.5.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../LIBRERIAS/slf4j-api-1.7.12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../LIBRERIAS/slf4j-simple-1.6.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../LIBRERIAS/tritonus-share-0.3.7.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

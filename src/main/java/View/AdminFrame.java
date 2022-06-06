@@ -1,13 +1,16 @@
 package View;
 
+import Controller.Controller;
+import Model.Dto.BroadcastStationDto;
+import Model.Dto.MusicProgramDto;
+import Model.Dto.MusicalTrackDto;
+
 import javax.swing.*;
-import javax.swing.plaf.ColorUIResource;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.lang.reflect.Array;
+import java.io.File;
 import java.util.ArrayList;
 
 public class AdminFrame extends JFrame implements ActionListener
@@ -48,21 +51,33 @@ public class AdminFrame extends JFrame implements ActionListener
 
     private JButton broadcastBtn;
     private JButton musicBtn;
+    private JButton musicfileBtn;
     private JButton programBtn;
     private JButton createBtn;
-    private JButton addBroadcastBtn;
     private JButton addMusicBtn;
     private JButton backBtn;
 
+    private JFileChooser musicFileChooser;
+
+    private String musicPath;
+
     private int option;
 
+    private Controller controller;
+    private ArrayList<MusicalTrackDto> musicList;
+    /**
+     *Constructor de la clase
+     */
     public AdminFrame()
     {
         super("TRENDYBEATS");
         initComponents();
     }
-
-    private void initComponents() {
+    /**
+     *Iniciación de los componenetes o atributos del Frame
+     */
+    private void initComponents()
+    {
         setLayout(new GridLayout(1, 2));
         setDefaultLookAndFeelDecorated(true);
         setResizable(false);
@@ -111,13 +126,16 @@ public class AdminFrame extends JFrame implements ActionListener
 
         broadcastBtn = new JButton("Broadcast");
         musicBtn = new JButton("Music");
+        musicfileBtn = new JButton("Search File");
         programBtn = new JButton("Program");
         createBtn = new JButton("Create");
-        addBroadcastBtn = new JButton("Add Broadcast");
         addMusicBtn = new JButton("Add Music");
         backBtn = new JButton("\uD83E\uDC68");
 
         option = 0;
+        controller = new Controller();
+        musicList = new ArrayList<MusicalTrackDto>();
+        musicFileChooser = new JFileChooser();
 
         //Add Components
         add(leftPanel);
@@ -145,11 +163,11 @@ public class AdminFrame extends JFrame implements ActionListener
         rightPanel.setBackground(Color.decode("#2B0548"));
 
         //Edit Left Panel Components
-        welcomeLbl.setBounds(90,20,300,100);
-        infoLbl.setBounds(80,80,350,200);
-        broadcastBtn.setBounds(80,305,350,40);
-        musicBtn.setBounds(80,350,350,40);
-        programBtn.setBounds(80,395,350,40);
+        welcomeLbl.setBounds(90, 20, 300, 100);
+        infoLbl.setBounds(80, 80, 350, 200);
+        broadcastBtn.setBounds(80, 305, 350, 40);
+        musicBtn.setBounds(80, 350, 350, 40);
+        programBtn.setBounds(80, 395, 350, 40);
 
         welcomeLbl.setFont(new Font("Montserrat", Font.BOLD, 20));
         welcomeLbl.setForeground(Color.decode("#2B0548"));
@@ -164,43 +182,22 @@ public class AdminFrame extends JFrame implements ActionListener
         programBtn.setForeground(Color.white);
         programBtn.setBackground(Color.decode("#2B0548"));
         programBtn.setFont(new Font("Montserrat", Font.BOLD, 17));
-        backBtn.setBounds(0,0,40,40);
+        backBtn.setBounds(0, 0, 40, 40);
         backBtn.setForeground(Color.decode("#2B0548"));
         backBtn.setContentAreaFilled(false);
         backBtn.setBorderPainted(false);
 
         //Edit Right Panel Components
-        rightphotoLbl.setBounds(50,50,400,400);
+        rightphotoLbl.setBounds(50, 50, 400, 400);
 
         //Button Listeners
         broadcastBtn.addActionListener(this);
         musicBtn.addActionListener(this);
+        musicfileBtn.addActionListener(this);
         programBtn.addActionListener(this);
         createBtn.addActionListener(this);
-        addBroadcastBtn.addActionListener(this);
         addMusicBtn.addActionListener(this);
-        broadcastCombobox.addActionListener(this);
-        musicCombobox.addActionListener(this);
         backBtn.addActionListener(this);
-
-        //Mouse Listener
-        broadcastCombobox.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-
-            }
-        });
-
-        musicCombobox.addMouseListener(new MouseAdapter()
-        {
-            @Override
-            public void mouseClicked(MouseEvent e)
-            {
-
-            }
-        });
 
         //Adding photos
         try
@@ -212,7 +209,7 @@ public class AdminFrame extends JFrame implements ActionListener
             rightphotoLbl.setIcon(icon);
              */
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             e.printStackTrace();
         }
@@ -233,57 +230,90 @@ public class AdminFrame extends JFrame implements ActionListener
             this.dispose();
         }
 
+        if (e.getSource() == musicfileBtn)
+        {
+            musicPath = addSongActionPerformed(e).toString();
+            JOptionPane.showMessageDialog(null, "Song added successfully" +  musicPath);
+            musicfileBtn.setText("Song Added");
+        }
+
+        if (e.getSource() == addMusicBtn)
+        {
+            for (int i = 0; i < controller.musicalTrackDao.musicalTrackList.size(); i++)
+            {
+                if (musicCombobox.getSelectedItem().equals(controller.musicalTrackDao.musicalTrackList.get(i).getNameMusicalTrack()))
+                {
+                    musicList.add(controller.musicalTrackDao.musicalTrackList.get(i));
+                    JOptionPane.showMessageDialog(null, "Music Added");
+                }
+            }
+        }
+
         if (e.getSource() == createBtn)
         {
             if (option == 1)
             {
-                //Create Broadcast
+                controller.saveObject(new BroadcastStationDto(broadcastNameTxt.getText(), broadcastDescriptionTxt.getText(), broadcastTypeTxt.getText()));
                 JOptionPane.showMessageDialog(null, "Broadcast Created");
                 option = 0;
             }
-            else if(option == 2)
+            else if (option == 2)
             {
-                //Create Music
+                controller.saveObject(new MusicalTrackDto(musicNameTxt.getText(), musicArtistTxt.getText(), musicGenreTxt.getText(), musicPath.toString()));
                 JOptionPane.showMessageDialog(null, "Music Created");
                 option = 0;
             }
-            else if(option == 3)
+            else if (option == 3)
             {
-                //Create Program
+                controller.saveObject(new MusicProgramDto((String) broadcastCombobox.getSelectedItem(), musicList));
                 JOptionPane.showMessageDialog(null, "Program Created");
                 option = 0;
             }
         }
 
-        if(option == 0)
+        if (e.getSource() == broadcastBtn)
         {
-            if(e.getSource() == broadcastBtn)
+            if (option == 0)
             {
                 rightPanel.removeAll();
                 rightPanel.repaint();
                 fillbroadcastPanel();
                 option = 1;
             }
+            else
+            {
+                JOptionPane.showMessageDialog(null, "Please finish the current instance before starting a new one.");
+            }
+        }
 
-            if (e.getSource() == musicBtn)
+        if (e.getSource() == musicBtn)
+        {
+            if (option == 0)
             {
                 rightPanel.removeAll();
                 rightPanel.repaint();
                 fillmusicPanel();
                 option = 2;
             }
+            else
+            {
+                JOptionPane.showMessageDialog(null, "Please finish the current instance before starting a new one.");
+            }
+        }
 
-            if (e.getSource() == programBtn)
+        if (e.getSource() == programBtn)
+        {
+            if (option == 0)
             {
                 rightPanel.removeAll();
                 rightPanel.repaint();
                 fillprogramPanel();
                 option = 3;
             }
-        }
-        else
-        {
-            JOptionPane.showMessageDialog(null, "Please finish the current instance before starting a new one.");
+            else
+            {
+                JOptionPane.showMessageDialog(null, "Please finish the current instance before starting a new one.");
+            }
         }
     }
 
@@ -300,7 +330,7 @@ public class AdminFrame extends JFrame implements ActionListener
         rightPanel.add(broadcastMusicTxt);
         rightPanel.add(createBtn);
 
-        broadcastCreateLbl.setBounds(130,60,400,25);
+        broadcastCreateLbl.setBounds(130, 60, 400, 25);
         broadcastNameLbl.setBounds(80, 110, 350, 20);
         broadcastDescriptionLbl.setBounds(80, 180, 350, 20);
         broadcastTypeLbl.setBounds(80, 250, 350, 20);
@@ -344,10 +374,10 @@ public class AdminFrame extends JFrame implements ActionListener
         rightPanel.add(musicNameTxt);
         rightPanel.add(musicArtistTxt);
         rightPanel.add(musicGenreTxt);
-        rightPanel.add(musicFileTxt);
+        rightPanel.add(musicfileBtn);
         rightPanel.add(createBtn);
 
-        musicCreateLbl.setBounds(150,60,400,25);
+        musicCreateLbl.setBounds(150, 60, 400, 25);
         musicNameLbl.setBounds(80, 110, 350, 20);
         musicArtistLbl.setBounds(80, 180, 350, 20);
         musicGenreLbl.setBounds(80, 250, 350, 20);
@@ -356,7 +386,7 @@ public class AdminFrame extends JFrame implements ActionListener
         musicNameTxt.setBounds(80, 130, 350, 40);
         musicArtistTxt.setBounds(80, 200, 350, 40);
         musicGenreTxt.setBounds(80, 270, 350, 40);
-        musicFileTxt.setBounds(80, 340, 350, 40);
+        musicfileBtn.setBounds(80, 340, 350, 40);
         createBtn.setBounds(80, 410, 350, 40);
 
         musicCreateLbl.setFont(new Font("Montserrat", Font.BOLD, 20));
@@ -368,13 +398,17 @@ public class AdminFrame extends JFrame implements ActionListener
         musicNameTxt.setFont(new Font("Montserrat Bold", 0, 17));
         musicArtistTxt.setFont(new Font("Montserrat Bold", 0, 17));
         musicGenreTxt.setFont(new Font("Montserrat Bold", 0, 17));
-        musicFileTxt.setFont(new Font("Montserrat Bold", 0, 17));
+        musicfileBtn.setFont(new Font("Montserrat Bold", 0, 17));
 
         musicCreateLbl.setForeground(Color.white);
         musicNameLbl.setForeground(Color.white);
         musicArtistLbl.setForeground(Color.white);
         musicGenreLbl.setForeground(Color.white);
         musicFileLbl.setForeground(Color.white);
+
+        musicfileBtn.setForeground(Color.decode("#2B0548"));
+        musicfileBtn.setBackground(Color.white);
+        musicfileBtn.setFont(new Font("Montserrat", Font.BOLD, 17));
 
         createBtn.setForeground(Color.white);
         createBtn.setBackground(Color.decode("#2B0548"));
@@ -387,8 +421,8 @@ public class AdminFrame extends JFrame implements ActionListener
         rightPanel.add(musicListLbl);
         rightPanel.add(broadcastCombobox);
         rightPanel.add(musicCombobox);
-        rightPanel.add(addBroadcastBtn);
         rightPanel.add(addMusicBtn);
+        rightPanel.add(createBtn);
 
         broadcastCombobox.setMaximumRowCount(4);
         musicCombobox.setMaximumRowCount(4);
@@ -399,8 +433,8 @@ public class AdminFrame extends JFrame implements ActionListener
         broadcastCombobox.setBounds(80, 105, 350, 40);
         musicCombobox.setBounds(80, 325, 350, 40);
 
-        addBroadcastBtn.setBounds(300, 150, 130, 30);
         addMusicBtn.setBounds(300, 370, 130, 30);
+        createBtn.setBounds(80, 410, 350, 40);
 
         broadcastListLbl.setFont(new Font("Montserrat Bold", 0, 17));
         musicListLbl.setFont(new Font("Montserrat Bold", 0, 17));
@@ -417,28 +451,55 @@ public class AdminFrame extends JFrame implements ActionListener
         musicCombobox.setForeground(Color.white);
         musicCombobox.setFont(new Font("Montserrat", 0, 17));
 
-        addBroadcastBtn.setForeground(Color.white);
-        addBroadcastBtn.setBackground(Color.decode("#2B0548"));
-        addBroadcastBtn.setFont(new Font("Montserrat", Font.BOLD, 12));
-
         addMusicBtn.setForeground(Color.white);
         addMusicBtn.setBackground(Color.decode("#2B0548"));
         addMusicBtn.setFont(new Font("Montserrat", Font.BOLD, 12));
-    }
 
-    public void fillmusicCombobox(ArrayList<String> musicList)
+        createBtn.setForeground(Color.white);
+        createBtn.setBackground(Color.decode("#2B0548"));
+        createBtn.setFont(new Font("Montserrat", Font.BOLD, 17));
+
+        fillmusicCombobox();
+        fillbroadcastCombobox();
+    }
+    /**
+     *Método para llenar el combobox instanciado de canciones
+     */
+    public void fillmusicCombobox()
     {
-        for (String music : musicList)
-        {
-            musicCombobox.addItem(music);
+        for (int i = 0; i < controller.musicalTrackDao.musicalTrackList.size(); i++) {
+            musicCombobox.addItem(controller.musicalTrackDao.musicalTrackList.get(i).getNameMusicalTrack());
         }
     }
-
-    public void fillbroadcastCombobox(ArrayList<String> broadcastList)
+    /**
+     *Método para llenar el combobox instanciado de broadcast
+     */
+    public void fillbroadcastCombobox()
     {
-        for (String broadcast : broadcastList)
-        {
-            broadcastCombobox.addItem(broadcast);
+        for (int i = 0; i < controller.broadcastStationDao.broadcastStationList.size(); i++) {
+            broadcastCombobox.addItem(controller.broadcastStationDao.broadcastStationList.get(i).getNameBroadcastStation());
         }
+    }
+    /**
+     *Método para instanciar jFileChooser
+     */
+    private String addSongActionPerformed(java.awt.event.ActionEvent evt)
+    {
+        musicFileChooser.setFileFilter(new FileNameExtensionFilter("Archivo MP3", "mp3", "mp3"));
+        musicFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        musicFileChooser.setMultiSelectionEnabled(true);
+        int selectedSong = musicFileChooser.showOpenDialog(this);
+
+        if (selectedSong == JFileChooser.APPROVE_OPTION)
+        {
+            File files[] = musicFileChooser.getSelectedFiles();
+            boolean nomp3 = false;
+            for (File file:files)
+            {
+                return file.getPath();
+            }
+
+        }
+        return "";
     }
 }
